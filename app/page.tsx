@@ -1,22 +1,40 @@
 'use client';
 import { useState, useEffect } from 'react';
 
+type Tab = 'todo' | 'completed';
+
+interface Todo {
+  id: number;
+  title: string;
+  description: string;
+  completed: boolean;
+  dateCreated: string;
+  dateUpdated: string;
+}
+
 export default function TodoApp() {
-  const [todos, setTodos] = useState([]);
-  const [newTodo, setNewTodo] = useState({ title: '', description: '' });
-  const [editingId, setEditingId] = useState(null);
-  const [editData, setEditData] = useState({ title: '', description: '' });
-  const [activeTab, setActiveTab] = useState('todo');
-  const [searchTerm, setSearchTerm] = useState('');
+  const [todos, setTodos] = useState<Todo[]>([]);
+  const [newTodo, setNewTodo] = useState<{ title: string; description: string }>({ title: '', description: '' });
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [editData, setEditData] = useState<{ title: string; description: string }>({ title: '', description: '' });
+  const [activeTab, setActiveTab] = useState<Tab>('todo');
+  const [searchTerm, setSearchTerm] = useState<string>('');
 
   // Load todos from localStorage on component mount
   useEffect(() => {
     const savedTodos = localStorage.getItem('todos');
     if (savedTodos) {
-      setTodos(JSON.parse(savedTodos));
+      try {
+        const parsed = JSON.parse(savedTodos);
+        if (Array.isArray(parsed)) {
+          setTodos(parsed as Todo[]);
+        }
+      } catch (e) {
+        console.warn('Failed to parse todos from localStorage, seeding sample data.');
+      }
     } else {
       // Initialize with sample data
-      const sampleTodos = [
+      const sampleTodos: Todo[] = [
         {
           id: 1700445601,
           title: 'Grocery Shopping',
@@ -68,17 +86,17 @@ export default function TodoApp() {
   }, [todos]);
 
   // Format date
-  const formatDate = () => {
+  const formatDate = (): string => {
     const now = new Date();
-    const options = { 
-      year: 'numeric', 
-      month: 'long', 
+    const options: Intl.DateTimeFormatOptions = {
+      year: 'numeric',
+      month: 'long',
       day: 'numeric',
       hour: '2-digit',
       minute: '2-digit',
-      hour12: true
+      hour12: true,
     };
-    return now.toLocaleDateString('en-US', options);
+    return now.toLocaleString('en-US', options);
   };
 
   // Create a new todo
@@ -99,7 +117,7 @@ export default function TodoApp() {
   };
 
   // Update a todo
-  const startEditing = (todo) => {
+  const startEditing = (todo: Todo) => {
     setEditingId(todo.id);
     setEditData({ title: todo.title, description: todo.description });
   };
@@ -125,17 +143,17 @@ export default function TodoApp() {
   };
 
   // Delete a todo
-  const deleteTodo = (id) => {
+  const deleteTodo = (id: number) => {
     setTodos(todos.filter(todo => todo.id !== id));
   };
 
   // Mark as complete/incomplete
-  const toggleComplete = (id) => {
+  const toggleComplete = (id: number) => {
     setTodos(todos.map(todo =>
-      todo.id === id ? { 
-        ...todo, 
+      todo.id === id ? {
+        ...todo,
         completed: !todo.completed,
-        dateUpdated: formatDate()
+        dateUpdated: formatDate(),
       } : todo
     ));
   };
@@ -249,7 +267,7 @@ export default function TodoApp() {
             <tbody className="bg-white divide-y divide-gray-200">
               {filteredTodos.length === 0 ? (
                 <tr>
-                  <td colSpan="5" className="px-6 py-8 text-center text-gray-500">
+                  <td colSpan={5} className="px-6 py-8 text-center text-gray-500">
                     {searchTerm ? 'No todos match your search.' : 'No todos found.'}
                   </td>
                 </tr>
